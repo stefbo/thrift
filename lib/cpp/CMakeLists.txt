@@ -201,6 +201,16 @@ if(WITH_QT5)
     add_subdirectory(src/thrift/qt)
 endif()
 
+if(WITH_ZEROMQ)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(ZEROMQ REQUIRED libzmq)
+    include_directories(SYSTEM ${ZEROMQ_INCLUDE_DIRS})
+
+    ADD_LIBRARY_THRIFT(thriftzmq ${thriftcppzmq_SOURCES})
+    TARGET_LINK_LIBRARIES_THRIFT(thriftzmq ${SYSLIBS} ${ZEROMQ_LDFLAGS})
+    TARGET_LINK_LIBRARIES_THRIFT_AGAINST_THRIFT_LIBRARY(thriftzmq thrift)
+endif()
+
 if(MSVC)
     add_definitions("-DUNICODE -D_UNICODE")
 endif()

@@ -60,6 +60,10 @@ if AMX_HAVE_QT5
 lib_LTLIBRARIES += libthriftqt5.la
 pkgconfig_DATA += thrift-qt5.pc
 endif
+if AMX_HAVE_ZEROMQ
+lib_LTLIBRARIES += libthriftzmq.la
+pkgconfig_DATA += thrift-zmq.pc
+endif
 
 AM_CXXFLAGS = -Wall -Wextra -pedantic
 AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(OPENSSL_INCLUDES) -I$(srcdir)/src -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
@@ -124,6 +128,8 @@ libthriftz_la_SOURCES = src/thrift/transport/TZlibTransport.cpp \
                         src/thrift/transport/THeaderTransport.cpp \
                         src/thrift/protocol/THeaderProtocol.cpp
 
+libthriftzmq_la_SOURCES = src/thrift/transport/TZmqTransport.cpp
+
 
 libthriftqt_la_MOC = src/thrift/qt/moc_TQTcpServer.cpp
 nodist_libthriftqt_la_SOURCES = $(libthriftqt_la_MOC)
@@ -142,6 +148,7 @@ libthriftnb_la_CPPFLAGS = $(AM_CPPFLAGS) $(LIBEVENT_CPPFLAGS)
 libthriftz_la_CPPFLAGS  = $(AM_CPPFLAGS) $(ZLIB_CPPFLAGS)
 libthriftqt_la_CPPFLAGS = $(AM_CPPFLAGS) $(QT_CFLAGS)
 libthriftqt5_la_CPPFLAGS = $(AM_CPPFLAGS) $(QT5_CFLAGS)
+libthriftzmq_la_CPPFLAGS = $(AM_CPPFLAGS) $(ZMQ_CPPFLAGS)
 if QT5_REDUCE_RELOCATIONS
 libthriftqt5_la_CPPFLAGS += -fPIC
 endif
@@ -149,10 +156,12 @@ libthriftnb_la_CXXFLAGS = $(AM_CXXFLAGS)
 libthriftz_la_CXXFLAGS  = $(AM_CXXFLAGS)
 libthriftqt_la_CXXFLAGS  = $(AM_CXXFLAGS)
 libthriftqt5_la_CXXFLAGS  = $(AM_CXXFLAGS)
+libthriftzmq_la_CXXFLAGS  = $(AM_CXXFLAGS)
 libthriftnb_la_LDFLAGS  = -release $(VERSION) $(BOOST_LDFLAGS)
 libthriftz_la_LDFLAGS   = -release $(VERSION) $(BOOST_LDFLAGS) $(ZLIB_LIBS)
 libthriftqt_la_LDFLAGS   = -release $(VERSION) $(BOOST_LDFLAGS) $(QT_LIBS)
 libthriftqt5_la_LDFLAGS   = -release $(VERSION) $(BOOST_LDFLAGS) $(QT5_LIBS)
+libthriftzmq_la_LDFLAGS   = -release $(VERSION) $(BOOST_LDFLAGS) $(ZEROMQ_LIBS)
 
 include_thriftdir = $(includedir)/thrift
 include_thrift_HEADERS = \
@@ -231,7 +240,8 @@ include_transport_HEADERS = \
                          src/thrift/transport/TTransportUtils.h \
                          src/thrift/transport/TBufferTransports.h \
                          src/thrift/transport/TShortReadTransport.h \
-                         src/thrift/transport/TZlibTransport.h
+                         src/thrift/transport/TZlibTransport.h \
+                         src/thrift/transport/TZmqTransport.h
 
 include_serverdir = $(include_thriftdir)/server
 include_server_HEADERS = \
@@ -283,6 +293,7 @@ EXTRA_DIST = \
              thrift-z.pc.in \
              thrift-qt.pc.in \
              thrift-qt5.pc.in \
+             thrift-zmq.pc.in \
              src/thrift/qt/CMakeLists.txt \
              $(WINDOWS_DIST)
 

@@ -186,12 +186,20 @@ if test "$with_cpp" = "yes";  then
       have_qt5=no
     fi
   fi
+
+  AX_THRIFT_LIB(zmq, [ZeroMQ], yes)
+  have_zeromq=no
+  if test "$with_zeromq" = "yes"; then
+    PKG_CHECK_MODULES([ZEROMQ], [libzmq >= 3.0], have_zeromq=yes, have_zeromq=no)
+  fi
 fi
+
 AM_CONDITIONAL([WITH_CPP], [test "$have_cpp" = "yes"])
 AM_CONDITIONAL([AMX_HAVE_LIBEVENT], [test "$have_libevent" = "yes"])
 AM_CONDITIONAL([AMX_HAVE_ZLIB], [test "$have_zlib" = "yes"])
 AM_CONDITIONAL([AMX_HAVE_QT], [test "$have_qt" = "yes"])
 AM_CONDITIONAL([AMX_HAVE_QT5], [test "$have_qt5" = "yes"])
+AM_CONDITIONAL([AMX_HAVE_ZEROMQ], [test "$have_zeromq" = "yes"])
 AM_CONDITIONAL([QT5_REDUCE_RELOCATIONS], [test "x$qt_reduce_reloc" != "x"])
 
 AX_THRIFT_LIB(c_glib, [C (GLib)], yes)
@@ -804,6 +812,7 @@ AC_CONFIG_FILES([
   lib/cpp/thrift-z.pc
   lib/cpp/thrift-qt.pc
   lib/cpp/thrift-qt5.pc
+  lib/cpp/thrift-zmq.pc
   lib/cpp/thrift.pc
   lib/c_glib/Makefile
   lib/c_glib/thrift_c_glib.pc
@@ -957,6 +966,7 @@ if test "$have_cpp" = "yes" ; then
   echo "   Build TNonblockingServer .. : $have_libevent"
   echo "   Build TQTcpServer (Qt4) ... : $have_qt"
   echo "   Build TQTcpServer (Qt5) ... : $have_qt5"
+  echo "   Build ZeroMQ support    ... : $have_zeromq"
   echo "   C++ compiler version ...... : $($CXX --version | head -1)"
 fi
 if test "$have_cl" = "yes" ; then

@@ -91,6 +91,13 @@ if(WITH_CPP)
     option(WITH_STDTHREADS "Build with C++ std::thread support" OFF)
     CMAKE_DEPENDENT_OPTION(WITH_BOOSTTHREADS "Build with Boost threads support" OFF
         "NOT WITH_STDTHREADS;Boost_FOUND" OFF)
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+      pkg_check_modules(ZEROMQ QUIET libzmq)
+      CMAKE_DEPENDENT_OPTION(WITH_ZEROMQ "Build with ZeroMQ support" ON
+                           "ZEROMQ_FOUND" OFF)
+    endif()
+    
 endif()
 CMAKE_DEPENDENT_OPTION(BUILD_CPP "Build C++ library" ON
                        "BUILD_LIBRARIES;WITH_CPP;Boost_FOUND" OFF)
@@ -215,5 +222,6 @@ message(STATUS "  Build with OpenSSL support:                 ${WITH_OPENSSL}")
 message(STATUS "  Build with Qt4 support:                     ${WITH_QT4}")
 message(STATUS "  Build with Qt5 support:                     ${WITH_QT5}")
 message(STATUS "  Build with ZLIB support:                    ${WITH_ZLIB}")
+message(STATUS "  Build with ZeroMQ support:                  ${WITH_ZEROMQ}")
 message(STATUS "----------------------------------------------------------")
 endmacro(PRINT_CONFIG_SUMMARY)
