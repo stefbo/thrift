@@ -89,6 +89,8 @@ class TZmqTransport : public TVirtualTransport<TZmqTransport> {
   void setInterruptSocket(stdcxx::shared_ptr<zmq::socket_t> interruptListener);
 
  private:
+  void readFromSocket();
+
   stdcxx::shared_ptr<zmq::socket_t> sock_;
   stdcxx::shared_ptr<zmq::socket_t> interruptListener_;
 

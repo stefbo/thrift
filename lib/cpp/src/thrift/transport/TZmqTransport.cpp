@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+#include "TZmqTransport.h"
+
+#include <zmq_addon.hpp>
 
 #include <algorithm>
 #include <cassert>
 #include <sstream>
-
-#include "TZmqTransport.h"
 
 namespace apache { namespace thrift { namespace transport {
 
@@ -46,40 +47,9 @@ void TZmqTransport::close() {
 }
 
 uint32_t TZmqTransport::read(uint8_t* buf, uint32_t len) {
-  // \todo Does not work with e.g. DEALER or multi-part PUB.
-
-  zmq_pollitem_t items[2] = { { *sock_, 0, ZMQ_POLLIN, 0 },
-      {NULL, 0, ZMQ_POLLIN, 0} };
-  int itemsUsed = 1;
-
-  if (interruptListener_) {
-    items[1].socket = *interruptListener_;
-    ++itemsUsed;
-  }
 
   if (rbuf_.available_read() == 0) {
-    try {
-      int ret = zmq::poll(items, itemsUsed);
-      if (ret > 0) {
-        if (itemsUsed >= 2 && (items[1].revents & ZMQ_POLLIN) != 0) {
-          // Read the message used to interrupt, so the transport can be
-          // used again later.
-          zmq::message_t msg;
-          (void) interruptListener_->recv(&msg);
-          throw TTransportException(TTransportException::INTERRUPTED);
-        } else if ((items[0].revents & ZMQ_POLLIN) != 0)
-          if (!sock_->recv(&inmsg_)) {
-            throw TTransportException(TTransportException::TIMED_OUT);
-          }
-
-        rbuf_.resetBuffer((uint8_t*) inmsg_.data(), inmsg_.size());
-      }
-
-    } catch (zmq::error_t& e) {
-      throw TTransportException(
-          TTransportException::UNKNOWN,
-          std::string("Receiving ZeroMQ message failed. ") + e.what());
-    }
+    readFromSocket();
   }
   return rbuf_.read(buf, len);
 }
@@ -115,6 +85,47 @@ void TZmqTransport::setInterruptSocket(
     stdcxx::shared_ptr<zmq::socket_t> interruptListener) {
   interruptListener_ = interruptListener;
 }
+
+
+void TZmqTransport::readFromSocket() {
+  zmq_pollitem_t items[2] = { { *sock_, 0, ZMQ_POLLIN, 0 }, { NULL, 0,
+  ZMQ_POLLIN, 0 } };
+  int itemsUsed = 1;
+
+  if (interruptListener_) {
+    items[1].socket = *interruptListener_;
+    ++itemsUsed;
+  }
+
+  try {
+    int ret = zmq::poll(items, itemsUsed);
+    if (ret > 0) {
+      if (itemsUsed >= 2 && (items[1].revents & ZMQ_POLLIN) != 0) {
+        // Read the message used to interrupt, so the transport can be
+        // used again later.
+        zmq::message_t msg;
+        (void) interruptListener_->recv(&msg);
+        throw TTransportException(TTransportException::INTERRUPTED);
+      } else if ((items[0].revents & ZMQ_POLLIN) != 0) {
+        zmq::multipart_t msgs;
+        if (!msgs.recv(*sock_)) {
+          throw TTransportException(TTransportException::TIMED_OUT);
+        }
+
+        // Use the last message. Usually, this is the data message.
+        inmsg_ = msgs.remove();
+      }
+
+      rbuf_.resetBuffer((uint8_t*) inmsg_.data(), inmsg_.size());
+    }
+
+  } catch (zmq::error_t& e) {
+    throw TTransportException(
+        TTransportException::UNKNOWN,
+        std::string("Receiving ZeroMQ message failed. ") + e.what());
+  }
+}
+
 
 }
 }
