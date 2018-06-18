@@ -160,6 +160,11 @@ set( thriftcppqt_SOURCES
     src/thrift/qt/TQTcpServer.cpp
 )
 
+# Thrift ZeroMQ support
+set( thriftcppzmq_SOURCES
+    src/thrift/transport/TZmqTransport.cpp
+)
+
 # Contains the thrift specific ADD_LIBRARY_THRIFT and TARGET_LINK_LIBRARIES_THRIFT
 include(ThriftMacros)
 
@@ -204,7 +209,9 @@ endif()
 if(WITH_ZEROMQ)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(ZEROMQ REQUIRED libzmq)
-    include_directories(SYSTEM ${ZEROMQ_INCLUDE_DIRS})
+    find_package(cppzmq REQUIRED)
+
+    include_directories(SYSTEM ${ZEROMQ_INCLUDE_DIRS} ${CPPZMQ_INCLUDE_DIR})
 
     ADD_LIBRARY_THRIFT(thriftzmq ${thriftcppzmq_SOURCES})
     TARGET_LINK_LIBRARIES_THRIFT(thriftzmq ${SYSLIBS} ${ZEROMQ_LDFLAGS})

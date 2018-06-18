@@ -94,8 +94,10 @@ if(WITH_CPP)
     find_package(PkgConfig QUIET)
     if(PKG_CONFIG_FOUND)
       pkg_check_modules(ZEROMQ QUIET libzmq)
-      CMAKE_DEPENDENT_OPTION(WITH_ZEROMQ "Build with ZeroMQ support" ON
-                           "ZEROMQ_FOUND" OFF)
+      find_package(cppzmq QUIET)
+
+      CMAKE_DEPENDENT_OPTION(WITH_ZEROMQ "Build with ZeroMQ support (requires C++11)" ON
+                           "ZEROMQ_FOUND;CPPZMQ_FOUND;NOT CMAKE_CXX_STANDARD EQUAL 98" OFF)
     endif()
     
 endif()
