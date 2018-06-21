@@ -128,7 +128,8 @@ libthriftz_la_SOURCES = src/thrift/transport/TZlibTransport.cpp \
                         src/thrift/transport/THeaderTransport.cpp \
                         src/thrift/protocol/THeaderProtocol.cpp
 
-libthriftzmq_la_SOURCES = src/thrift/transport/TZmqTransport.cpp
+libthriftzmq_la_SOURCES = src/thrift/transport/TZmqTransport.cpp \
+                          src/thrift/server/TZmqServer.cpp
 
 
 libthriftqt_la_MOC = src/thrift/qt/moc_TQTcpServer.cpp

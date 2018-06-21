@@ -163,6 +163,7 @@ set( thriftcppqt_SOURCES
 # Thrift ZeroMQ support
 set( thriftcppzmq_SOURCES
     src/thrift/transport/TZmqTransport.cpp
+    src/thrift/server/TZmqServer.cpp
 )
 
 # Contains the thrift specific ADD_LIBRARY_THRIFT and TARGET_LINK_LIBRARIES_THRIFT
