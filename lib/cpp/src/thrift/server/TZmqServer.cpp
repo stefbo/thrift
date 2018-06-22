@@ -20,22 +20,22 @@
 #include "TZmqServer.h"
 #include <thrift/transport/TBufferTransports.h>
 
-#include <iostream> // \todo rmeove
 using namespace std;
 
 using apache::thrift::transport::TTransportException;
 
-namespace apache { namespace thrift { namespace server {
+namespace apache {
+namespace thrift {
+namespace server {
 
-TZmqServer::TZmqServer(
-    zmq::context_t & context,
-    stdcxx::shared_ptr<TProcessor> processor,
-    stdcxx::shared_ptr<transport::TZmqTransport> transport,
-    stdcxx::shared_ptr<protocol::TProtocolFactory> protocolFactory)
-    : processor_(processor),
-      protocol_(protocolFactory->getProtocol(transport)),
-      interruptSend_(context, ZMQ_PAIR),
-      interruptRecv_(new zmq::socket_t(context, ZMQ_PAIR)) {
+TZmqServer::TZmqServer(zmq::context_t& context,
+                       stdcxx::shared_ptr<TProcessor> processor,
+                       stdcxx::shared_ptr<transport::TZmqTransport> transport,
+                       stdcxx::shared_ptr<protocol::TProtocolFactory> protocolFactory)
+  : processor_(processor),
+    protocol_(protocolFactory->getProtocol(transport)),
+    interruptSend_(context, ZMQ_PAIR),
+    interruptRecv_(new zmq::socket_t(context, ZMQ_PAIR)) {
   const char interruptEndpoint[] = "inproc://TZmqServer_interrupt";
   interruptRecv_->bind(interruptEndpoint);
   interruptSend_.connect(interruptEndpoint);
@@ -43,12 +43,12 @@ TZmqServer::TZmqServer(
 }
 
 void TZmqServer::serve() {
-  for(bool done = false; !done; ) {
+  for (bool done = false; !done;) {
     try {
       if (!processor_->process(protocol_, NULL)) {
         done = true;
       }
-    } catch (TTransportException & e) {
+    } catch (TTransportException& e) {
       if (e.getType() == TTransportException::TIMED_OUT) {
         // Accept timeout - continue processing.
       } else if (e.getType() == TTransportException::INTERRUPTED) {
@@ -58,16 +58,18 @@ void TZmqServer::serve() {
         throw;
       }
     }
-  }  // for-loop
+  } // for-loop
 }
 
 void TZmqServer::stop() {
   concurrency::Guard g(rwMutex_);
-  (void) interruptSend_.send("", 0);
+  (void)interruptSend_.send("", 0);
 }
 
 void TZmqServer::run() {
   serve();
 }
 
-}}} // apache::thrift::server
+} // namespace server
+} // namespace thrift
+} // namespace apache

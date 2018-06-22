@@ -24,13 +24,13 @@
 #include <cassert>
 #include <sstream>
 
-namespace apache { namespace thrift { namespace transport {
+namespace apache {
+namespace thrift {
+namespace transport {
 
-TZmqTransport::TZmqTransport(stdcxx::shared_ptr<zmq::socket_t>& sock)
-    : sock_(sock) {
+TZmqTransport::TZmqTransport(stdcxx::shared_ptr<zmq::socket_t>& sock) : sock_(sock) {
   if (!sock_) {
-    throw TTransportException(TTransportException::BAD_ARGS,
-                              "ZeroMQ socket is invalid..");
+    throw TTransportException(TTransportException::BAD_ARGS, "ZeroMQ socket is invalid..");
   }
 }
 
@@ -73,7 +73,7 @@ void TZmqTransport::flush() {
     }
   } catch (zmq::error_t& e) {
     throw TTransportException(TTransportException::UNKNOWN,
-        std::string("Sending ZeroMQ message failed. ") + e.what());
+                              std::string("Sending ZeroMQ message failed. ") + e.what());
   }
 }
 
@@ -81,15 +81,12 @@ stdcxx::shared_ptr<zmq::socket_t> TZmqTransport::getSocket() {
   return sock_;
 }
 
-void TZmqTransport::setInterruptSocket(
-    stdcxx::shared_ptr<zmq::socket_t> interruptListener) {
+void TZmqTransport::setInterruptSocket(stdcxx::shared_ptr<zmq::socket_t> interruptListener) {
   interruptListener_ = interruptListener;
 }
 
-
 void TZmqTransport::readFromSocket() {
-  zmq_pollitem_t items[2] = { { *sock_, 0, ZMQ_POLLIN, 0 }, { NULL, 0,
-  ZMQ_POLLIN, 0 } };
+  zmq_pollitem_t items[2] = {{*sock_, 0, ZMQ_POLLIN, 0}, {NULL, 0, ZMQ_POLLIN, 0}};
   int itemsUsed = 1;
 
   if (interruptListener_) {
@@ -104,7 +101,7 @@ void TZmqTransport::readFromSocket() {
         // Read the message used to interrupt, so the transport can be
         // used again later.
         zmq::message_t msg;
-        (void) interruptListener_->recv(&msg);
+        (void)interruptListener_->recv(&msg);
         throw TTransportException(TTransportException::INTERRUPTED);
       } else if ((items[0].revents & ZMQ_POLLIN) != 0) {
         zmq::multipart_t msgs;
@@ -116,17 +113,15 @@ void TZmqTransport::readFromSocket() {
         inmsg_ = msgs.remove();
       }
 
-      rbuf_.resetBuffer((uint8_t*) inmsg_.data(), inmsg_.size());
+      rbuf_.resetBuffer((uint8_t*)inmsg_.data(), inmsg_.size());
     }
 
   } catch (zmq::error_t& e) {
-    throw TTransportException(
-        TTransportException::UNKNOWN,
-        std::string("Receiving ZeroMQ message failed. ") + e.what());
+    throw TTransportException(TTransportException::UNKNOWN,
+                              std::string("Receiving ZeroMQ message failed. ") + e.what());
   }
 }
 
-
-}
-}
-}  // apache::thrift::transport
+} // namespace transport
+} // namespace thrift
+} // namespace apache

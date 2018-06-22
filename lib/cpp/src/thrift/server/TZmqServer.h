@@ -20,15 +20,17 @@
 #ifndef _THRIFT_SERVER_TZMQSERVER_H_
 #define _THRIFT_SERVER_TZMQSERVER_H_ 1
 
-#include <thrift/transport/TZmqTransport.h>
 #include <thrift/TProcessor.h>
-#include <thrift/protocol/TProtocol.h>
-#include <thrift/concurrency/Thread.h>
 #include <thrift/concurrency/Mutex.h>
+#include <thrift/concurrency/Thread.h>
+#include <thrift/protocol/TProtocol.h>
+#include <thrift/transport/TZmqTransport.h>
 
 #include <zmq.hpp>
 
-namespace apache { namespace thrift { namespace server {
+namespace apache {
+namespace thrift {
+namespace server {
 
 /** A simple ZeroMQ server based on @ref TZmqTransport.
  *
@@ -40,8 +42,9 @@ namespace apache { namespace thrift { namespace server {
  * - No support for server event handlers (@ref TServerEventHandler).
  */
 class TZmqServer : public concurrency::Runnable {
- public:
-  TZmqServer(zmq::context_t & context, stdcxx::shared_ptr<TProcessor> processor,
+public:
+  TZmqServer(zmq::context_t& context,
+             stdcxx::shared_ptr<TProcessor> processor,
              stdcxx::shared_ptr<transport::TZmqTransport> transport,
              stdcxx::shared_ptr<protocol::TProtocolFactory> protocolFactory);
 
@@ -52,7 +55,7 @@ class TZmqServer : public concurrency::Runnable {
   // Allows running the server as a @ref Runnable thread
   virtual void run();
 
- private:
+private:
   stdcxx::shared_ptr<TProcessor> processor_;
   stdcxx::shared_ptr<protocol::TProtocol> protocol_;
 
@@ -62,6 +65,8 @@ class TZmqServer : public concurrency::Runnable {
   stdcxx::shared_ptr<zmq::socket_t> interruptRecv_;
 };
 
-}}} // apache::thrift::server
+} // namespace server
+} // namespace thrift
+} // namespace apache
 
 #endif // #ifndef _THRIFT_SERVER_TZMQSERVER_H_

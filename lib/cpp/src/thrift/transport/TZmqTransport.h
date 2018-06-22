@@ -20,18 +20,20 @@
 #ifndef H4687D222_9464_4DB6_BF87_AC5840A8137E
 #define H4687D222_9464_4DB6_BF87_AC5840A8137E
 
-#include <thrift/transport/TVirtualTransport.h>
-#include <thrift/transport/TBufferTransports.h>  // TMemoryBuffer
 #include <thrift/stdcxx.h>
+#include <thrift/transport/TBufferTransports.h> // TMemoryBuffer
+#include <thrift/transport/TVirtualTransport.h>
 
 #include <zmq.hpp>
 
-namespace apache { namespace thrift { namespace transport {
+namespace apache {
+namespace thrift {
+namespace transport {
 
 /** \todo
  */
 class TZmqTransport : public TVirtualTransport<TZmqTransport> {
- public:
+public:
   /** Constructor.
    *
    * It is assumed that the socket is already connected or bound. Because ZeroMQ
@@ -88,7 +90,7 @@ class TZmqTransport : public TVirtualTransport<TZmqTransport> {
    */
   void setInterruptSocket(stdcxx::shared_ptr<zmq::socket_t> interruptListener);
 
- private:
+private:
   void readFromSocket();
 
   stdcxx::shared_ptr<zmq::socket_t> sock_;
@@ -100,6 +102,8 @@ class TZmqTransport : public TVirtualTransport<TZmqTransport> {
   zmq::message_t outmsg_;
 };
 
-}}}  // apache::thrift::transport
+} // namespace transport
+} // namespace thrift
+} // namespace apache
 
 #endif /* H4687D222_9464_4DB6_BF87_AC5840A8137E */
