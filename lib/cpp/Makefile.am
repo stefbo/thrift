@@ -252,7 +252,8 @@ include_server_HEADERS = \
                          src/thrift/server/TSimpleServer.h \
                          src/thrift/server/TThreadPoolServer.h \
                          src/thrift/server/TThreadedServer.h \
-                         src/thrift/server/TNonblockingServer.h
+                         src/thrift/server/TNonblockingServer.h \
+                         src/thrift/server/TZmqServer.h
 
 include_processordir = $(include_thriftdir)/processor
 include_processor_HEADERS = \
