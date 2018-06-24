@@ -43,7 +43,7 @@ bool TZmqTransport::isOpen() {
 }
 
 void TZmqTransport::close() {
-  sock_->close();
+  // Intentionally left empty.
 }
 
 uint32_t TZmqTransport::read(uint8_t* buf, uint32_t len) {
@@ -60,10 +60,21 @@ void TZmqTransport::write(const uint8_t* buf, uint32_t len) {
 
 void TZmqTransport::flush() {
   try {
+    zmq::message_t msg;
+
+    // Send the subscription - if any
+    if (subscriptionKeyMsg_.size() > 0) {
+      msg.copy(&subscriptionKeyMsg_);
+      if (!sock_->send(msg)) {
+        throw TTransportException(TTransportException::TIMED_OUT);
+      }
+    }
+
+    // Send the data.
     uint8_t* buf = NULL;
     uint32_t size = 0;
     wbuf_.getBuffer(&buf, &size);
-    zmq::message_t msg(buf, size);
+    msg.rebuild(buf, size);
 
     // Make sure the data is flushed internally, even in case of an error.
     wbuf_.resetBuffer(true);
@@ -97,28 +108,43 @@ void TZmqTransport::readFromSocket() {
   try {
     int ret = zmq::poll(items, itemsUsed);
     if (ret > 0) {
+      zmq::message_t msg;
+
       if (itemsUsed >= 2 && (items[1].revents & ZMQ_POLLIN) != 0) {
         // Read the message used to interrupt, so the transport can be
         // used again later.
-        zmq::message_t msg;
         (void)interruptListener_->recv(&msg);
         throw TTransportException(TTransportException::INTERRUPTED);
-      } else if ((items[0].revents & ZMQ_POLLIN) != 0) {
+      }
+
+      if ((items[0].revents & ZMQ_POLLIN) != 0) {
         zmq::multipart_t msgs;
         if (!msgs.recv(*sock_)) {
           throw TTransportException(TTransportException::TIMED_OUT);
         }
 
         // Use the last message. Usually, this is the data message.
-        inmsg_ = msgs.remove();
+        msg = msgs.remove();
+        rbuf_.resetBuffer((uint8_t*)msg.data(), msg.size(), TMemoryBuffer::COPY);
       }
-
-      rbuf_.resetBuffer((uint8_t*)inmsg_.data(), inmsg_.size());
     }
 
   } catch (zmq::error_t& e) {
     throw TTransportException(TTransportException::UNKNOWN,
                               std::string("Receiving ZeroMQ message failed. ") + e.what());
+  }
+}
+
+void TZmqTransport::setSubscriptionKey(const std::string& key) {
+  if (sock_->getsockopt<int>(ZMQ_TYPE) != ZMQ_PUB) {
+    try {
+      subscriptionKeyMsg_.rebuild(key.c_str(), key.size());
+    } catch (zmq::error_t& e) {
+      throw TTransportException(TTransportException::BAD_ARGS);
+    }
+  } else {
+    throw TTransportException(TTransportException::BAD_ARGS,
+                              "Setting a subscription key is allowed on PUB sockets only.");
   }
 }
 

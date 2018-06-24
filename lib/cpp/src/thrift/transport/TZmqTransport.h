@@ -30,7 +30,37 @@ namespace apache {
 namespace thrift {
 namespace transport {
 
-/** \todo
+/** ZeroMQ-based transport.
+ *
+ * Takes a so-called ZeroMQ socket and uses it to send and receive messages.
+ *
+ * ZeroMQ brings its own communication styles depending on the socket and hence,
+ * using `oneway` messages and regular messages is restricted to specific socket
+ * types. Regular request/reply style communication is allowed only with a pair
+ * or REQ/REP sockets, where `oneway` messages are allowed with PUSH/PULL
+ * sockets and SUB/PUB sockets only. Mixing `oneway` and regular messages in
+ * Thrift is not easily possible.
+ *
+ * The concept of sockets is very different compared to BSD sockets. This has
+ * the following consequences:
+ * - There is no distinction between a server socket and sockets used to
+ *   communicate to connected clients. Accepting client connections is is
+ *   transparent to the application.
+ * - When using BSD sockets, servers **bind** the socket and accept clients
+ *   while clients **connect** to the server. In ZeroMQ, there is a similar
+ *   concept of bind and connect, but it does not imply any role of the socket.
+ *   When using a PUB/SUB socket pair, you can decide whether to bind the PUB
+ *   or the SUB sockets and both alternatives make perfect sense. Therefore,
+ *   implementing a useful @ref open method does not make sense, because it
+ *   would have to know whether to bind or connect.
+ * - In ZeroMQ a message may contain multiple so-called **frames**. When using
+ *   Thrift on top of ZeroMQ only a single frame is sent, except for one case.
+ *   When using a PUB/SUB socket pair, the publisher can precede the message
+ *   with a message containing data that is binary matched against the
+ *   subscription key. A static subscription key for the transport can be
+ *   set by @ref setSubscriptionKey.
+ *
+ * See the constructor for a simple example how to use the socket.
  */
 class TZmqTransport : public TVirtualTransport<TZmqTransport> {
 public:
@@ -58,6 +88,17 @@ public:
   /** Returns the underlying ZeroMQ socket.
    */
   stdcxx::shared_ptr<zmq::socket_t> getSocket();
+
+  /** Sets the static subscription for the socket.
+   *
+   * Only allowed for sockets of type `PUB`. By default no subscription key is
+   * set, that is, no additional frame is sent in front of the data.
+   *
+   * The key can be changed at any time.
+   *
+   * @param key The new subscription key.
+   */
+  void setSubscriptionKey(const std::string& key);
 
   /** @name Methods to implement @ref TTransport.
    * @{
@@ -98,8 +139,7 @@ private:
 
   TMemoryBuffer wbuf_;
   TMemoryBuffer rbuf_;
-  zmq::message_t inmsg_;
-  zmq::message_t outmsg_;
+  zmq::message_t subscriptionKeyMsg_;
 };
 
 } // namespace transport
